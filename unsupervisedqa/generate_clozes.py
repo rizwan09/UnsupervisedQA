@@ -48,7 +48,7 @@ def is_appropriate_answer(answer_text):
     return correct_char_length and correct_word_length
 
 
-def is_appropriate_squad_datapoint(question_text, answer_text, paragraph_text):
+def is_appropriate_squad_datapoint(question_text, answer_text, paragraph_text, use_prohibit_combined_question):
     p_char_len_good = len(paragraph_text) <= MAX_PARAGRAPH_CHAR_LEN_THRESHOLD
     p_word_len_good = len(paragraph_text.split()) <= MAX_PARAGRAPH_WORD_LEN_THRESHOLD
     p_wordsize_good = all([len(w) <= MAX_PARAGRAPH_WORDSIZE_THRESHOLD for w in paragraph_text.split()])
@@ -62,7 +62,8 @@ def is_appropriate_squad_datapoint(question_text, answer_text, paragraph_text):
     a_char_len_good = MIN_ANSWER_CHAR_LEN <= len(answer_text) <= MAX_ANSWER_CHAR_LEN
     a_word_len_good = MIN_ANSWER_WORD_LEN <= len(answer_text.split()) <= MAX_ANSWER_WORD_LEN
     a_good = a_char_len_good and a_word_len_good
-    return p_good and q_good and a_good
+    combined_good = not use_prohibit_combined_question or ('and wh' not in question_text and 'and how' not in question_text)
+    return p_good and q_good and a_good and combined_good
 
 
 def get_cloze_id(paragraph_text, sentence_text, answer_text):
@@ -79,17 +80,42 @@ def generate_clozes_from_paragraph(paragraph, answer_generator):
             answers = answer_generator(sentence)
             for answer_text, answer_start, answer_type in answers:
                 if is_appropriate_answer(answer_text):
-                    yield Cloze(
+                    if paragraph.title:
+                        title=paragraph.title
+                    else: title=None
+                    cloze =  Cloze(
                         cloze_id=get_cloze_id(paragraph.text, sentence.text, answer_text),
                         paragraph=paragraph,
                         source_text=sentence.text,
                         source_start=sentence.start_char,
                         cloze_text=mask_answer(sentence.text, answer_text, answer_start, answer_type),
+                        unmasked_cloze_text = sentence.text,
                         answer_text=answer_text,
                         answer_start=answer_start,
                         constituency_parse=None,
                         root_label=None,
                         answer_type=answer_type,
-                        question_text=None
+                        question_text=None,
+                        paragraph_title=title
                     )
-    return clozes
+                    yield cloze
+
+
+def generate_cloze_from_rule_based(paragraph, q, unmasked_cloze_text, source_text, answer_text, source_start, answer_start, answer_type):
+    if is_appropriate_answer(answer_text):
+        cloze =  Cloze(
+            cloze_id=get_cloze_id(paragraph.text, unmasked_cloze_text, answer_text),
+            paragraph=paragraph,
+            source_text=source_text,
+            source_start=source_start,
+            cloze_text=mask_answer(unmasked_cloze_text, answer_text, answer_start, answer_type),
+            unmasked_cloze_text = unmasked_cloze_text,
+            answer_text=answer_text,
+            answer_start=answer_start,
+            constituency_parse=None,
+            root_label=None,
+            answer_type=answer_type,
+            question_text=q,
+            paragraph_title=paragraph.title
+        )
+        yield cloze
