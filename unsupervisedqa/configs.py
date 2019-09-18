@@ -67,8 +67,31 @@ UNMT_BEAM_SIZE = 0
 UNMT_BATCH_SIZE = 30
 
 
+# XLM configs:
+PATH_TO_XLM = os.path.join(HERE, '../../../../XLM')
+XLM_DATA_DIR = os.path.join(HERE, '../../../../XLM/data/nq_to_cloze2')
+XLM_MODEL= os.path.join(PATH_TO_XLM, 'dumped/UNMT_NQ_CLOZE/lsyt0bufl4/checkpoint.pth ')
+TOOLS_PATH = os.path.join(PATH_TO_XLM, 'tools')
+TRANSLATOR = os.path.join(PATH_TO_XLM,"translate.py")
+XLM_FASTBPE = os.path.join(TOOLS_PATH,'fastBPE/fast')
+PROC_PATH = os.path.join(XLM_DATA_DIR, 'processed/nq.en-cloze.en')
+BPE_CODES=os.path.join(PROC_PATH,'codes')
+SRC_VOCAB=os.path.join(PROC_PATH,'vocab.nq.en')
+TGT_VOCAB=os.path.join(PROC_PATH,'vocab.cloze.en')
+FULL_VOCAB=os.path.join(PROC_PATH,'vocab.nq.en-cloze.en')
+MOSES=os.path.join(TOOLS_PATH,'mosesdecoder')
+REPLACE_UNICODE_PUNCT=os.path.join(MOSES,'scripts/tokenizer/replace-unicode-punctuation.perl')
+NORM_PUNC=os.path.join(MOSES, 'scripts/tokenizer/normalize-punctuation.perl')
+REM_NON_PRINT_CHAR=os.path.join(MOSES, 'scripts/tokenizer/remove-non-printing-char.perl')
+TOKENIZER=os.path.join(MOSES,'scripts/tokenizer/tokenizer.perl')
+INPUT_FROM_SGM=os.path.join(MOSES,'scripts/ems/support/input-from-sgm.perl')
+SRC_PREPROCESSING=f'{REPLACE_UNICODE_PUNCT} | {NORM_PUNC} -l nq.en | {REM_NON_PRINT_CHAR} | {TOKENIZER} -l nq.en -no-escape -threads 8'
+
+
+
 # CLOZE MASKS:
 NOUNPHRASE_LABEL = 'NOUNPHRASE'
+NOUN_TAG = 'NOUNTAG'
 CLOZE_MASKS = {
     'PERSON': 'IDENTITYMASK',
     'NORP': 'IDENTITYMASK',
@@ -91,6 +114,33 @@ CLOZE_MASKS = {
     'CARDINAL': 'NUMERICMASK',
     NOUNPHRASE_LABEL: 'NOUNPHRASEMASK'
 }
+
+CLOZE_FINEGRAINED__MASKS = {
+    'PERSON': 'PERSONMASK',
+    'NORP': 'NORPMASK',
+    'FAC': 'FACMASK',
+    'ORG': 'ORGMASK',
+    'GPE': 'GPEMASK',
+    'LOC': 'LOCMASK',
+    'PRODUCT': 'PRODUCTMASK',
+    'EVENT': 'EVENTMASK',
+    'WORKOFART': 'WORKOFARTMASK',
+    'WORK_OF_ART': 'WORK_OF_ARTMASK',
+    'LAW': 'LAWMASK',
+    'LANGUAGE': 'LANGUAGEMASK',
+    'DATE': 'DATEMASK',
+    'TIME': 'TEMPORALMASK',
+    'PERCENT': 'PERCENTMASK',
+    'MONEY': 'MONEYMASK',
+    'QUANTITY': 'QUANTITYMASK',
+    'ORDINAL': 'ORDINALMASK',
+    'CARDINAL': 'CARDINALMASK',
+    NOUNPHRASE_LABEL: 'NOUNPHRASEMASK',
+    NOUN_TAG: 'NOUNTAGMASK'
+
+}
+
+
 HEURISTIC_CLOZE_TYPE_QUESTION_MAP = {
     'PERSON': ['Who', ],
     'NORP': ['Who', ],
